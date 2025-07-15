@@ -35,7 +35,7 @@ import com.ibm.dtfj.java.JavaRuntime;
  * <li>1: File not specified</li>
  * <li>2: Some exception caught</li>
  * <li>3: The dump was produced by IBM Java</li>
- * <li>4: The dump was produced by Eclipse OpenJ9 (non-IBM Java) or Java &gt;= 10</li>
+ * <li>4: The dump was produced by IBM Semeru Runtimes</li>
  * <li>5: The dump was produced by an unknown vendor</li>
  * <li>6: No DTFJ dump found</li>
  * <li>7: Stored version string is null</li>
@@ -44,10 +44,21 @@ import com.ibm.dtfj.java.JavaRuntime;
  * @author kevin.grigorenko@us.ibm.com
  */
 public class DTFJVendorCheck {
+	public static final int RESULT_FILE_NOT_SPECIFIED = 1;
+	public static final int RESULT_EXCEPTION = 2;
+	public static final int RESULT_IBMJAVA = 3;
+	public static final int RESULT_SEMERU = 4;
+	public static final int RESULT_UNKNOWN = 5;
+	public static final int RESULT_NODUMP = 6;
+	public static final int RESULT_NOVERSION = 7;
+
+	public static final String MESSAGE_IBMJAVA = "Dump produced by IBM Java";
+	public static final String MESSAGE_SEMERU = "Dump produced by IBM Semeru Runtimes";
+
 	private static void usage(String error) {
 		System.err.println("Error: " + error);
 		System.err.println("usage: java DTFJVendorCheck file");
-		System.exit(1);
+		System.exit(RESULT_FILE_NOT_SPECIFIED);
 	}
 
 	public static void main(String[] args) {
@@ -96,31 +107,42 @@ public class DTFJVendorCheck {
 							System.exit(7);
 						} else {
 	
-							Pattern p = Pattern.compile("build [0-9][0-9]");
-							Matcher m = p.matcher(producingVmName);
-							
+							Matcher m1 = Pattern.compile("build [0-9][0-9]").matcher(producingVmName);
+							Matcher m2 = Pattern.compile("build 8\\.0\\.8\\.").matcher(producingVmName);
+							Matcher m3 = Pattern.compile("build 1\\.8\\.").matcher(producingVmName);
+
 							if ("IBM J9 VM".equals(producingVmName)) {
 								if (!quiet) {
-									System.out.println("Dump produced by IBM Java");
+									System.out.println(MESSAGE_IBMJAVA);
 								}
-								System.exit(3);
-							} else if ("Eclipse OpenJ9 VM".equals(producingVmName) || producingVmName.contains("Semeru Runtime")) {
+								System.exit(RESULT_IBMJAVA);
+							} else if (producingVmName.contains("Semeru Runtime")) {
 								// Examples:
 								// JRE 1.8.0 AIX ppc64-64 (build 1.8.0_402-b06) IBM Semeru Runtime Open Edition
 								if (!quiet) {
-									System.out.println("Dump produced by Eclipse OpenJ9 (non-IBM Java)");
+									System.out.println(MESSAGE_SEMERU);
 								}
-								System.exit(4);
-							} else if (m.find()) {
+								System.exit(RESULT_SEMERU);
+							} else if (m1.find()) {
 								if (!quiet) {
-									System.out.println("Dump produced by Java >= 10");
+									System.out.println(MESSAGE_SEMERU);
 								}
-								System.exit(4);
+								System.exit(RESULT_SEMERU);
+							} else if (m2.find()) {
+								if (!quiet) {
+									System.out.println(MESSAGE_IBMJAVA);
+								}
+								System.exit(RESULT_IBMJAVA);
+							} else if (m3.find()) {
+								if (!quiet) {
+									System.out.println(MESSAGE_SEMERU);
+								}
+								System.exit(RESULT_SEMERU);
 							} else {
 								if (!quiet) {
 									System.err.println("Dump produced by unknown vendor: " + producingVmName);
 								}
-								System.exit(5);
+								System.exit(RESULT_UNKNOWN);
 							}
 						}
 					}
@@ -130,12 +152,12 @@ public class DTFJVendorCheck {
 			if (!quiet) {
 				System.err.println("No DTFJ dump found");
 			}
-			System.exit(6);
+			System.exit(RESULT_NODUMP);
 		} catch (Throwable t) {
 			if (!quiet) {
 				t.printStackTrace();
 			}
-			System.exit(2);
+			System.exit(RESULT_EXCEPTION);
 		}
 	}
 }

@@ -4,12 +4,13 @@ Command line program to determine [DTFJ](https://eclipse.dev/openj9/docs/interfa
 
 ## Usage
 
-1. Download `DTFJVendorCheck.class`
-2. Execute (where `file` is a J9 diagnostic such as a core dump or PHD)
+1. Ensure an IBM Java 8 or IBM Semeru Runtimes JDK is on `PATH`. Semeru downloads: <https://developer.ibm.com/languages/java/semeru-runtimes/downloads/>
+2. Download `DTFJVendorCheck.class`
+3. Execute (where `file` is a J9 diagnostic such as a core dump or PHD)
    ```
    java DTFJVendorCheck file
    ```
-3. Use the return code (e.g. `$?`)
+4. Use the return code (e.g. `$?`)
 
 Return codes:
 
@@ -24,7 +25,7 @@ Return codes:
 ## Development
 
 ```
-javac -source 1.8 -target 1.8 DTFJVendorCheck.java
+javac -Xlint:-options -source 1.8 -target 1.8 DTFJVendorCheck.java
 ```
 
 ## Files
